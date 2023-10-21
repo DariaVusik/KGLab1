@@ -1,173 +1,155 @@
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-public class HSVSwatch extends JPanel implements Observer{
-    JSlider HueComponent;
-    JSlider SaturationComponent;
-    JSlider ValueComponent;
-
-    JTextField hue;
-    JTextField saturation;
-    JTextField value;
-
-    ColorPanel ownColorPanel;
-    Color ownColor;
 
 
+public class HSVSwatch extends JPanel implements Observer {
 
-    static final int MAX_VALUE = 100;
-    static final int MIN_VALUE = 100;
-    public HSVSwatch(Color color, ColorPanel colorPanel){
-        super();
-        ownColor = color;
-        ownColorPanel = colorPanel;
+    private int H;
+    private int S;
+    private int V;
 
-        HueComponent = new JSlider(JSlider.HORIZONTAL,360, 0);
-        SaturationComponent = new JSlider(JSlider.HORIZONTAL,MAX_VALUE, MIN_VALUE);
-        ValueComponent = new JSlider(JSlider.HORIZONTAL,MAX_VALUE, MIN_VALUE);
+    private final ColorPanel colorPanel;
 
-        hue = new JTextField(3);
-        saturation = new JTextField(3);
-        value = new JTextField(3);
-        update(color);
+    private final JTextField hueTextField;
+    private final JTextField saturationTextField;
+    private final JTextField valueTextField;
+
+    private final JSlider hueSlider;
+    private final JSlider saturationSlider;
+    private final JSlider valueSlider;
+
+    private boolean is_source;
 
 
+    public HSVSwatch(ColorPanel cp) {
+        colorPanel = cp;
+        update_values();
+
+        hueTextField = new JTextField("" + H);
+        saturationTextField = new JTextField("" + S);
+        valueTextField = new JTextField("" + V);
+
+        int HUE_MAX_VAL = 360;
+        hueSlider = new JSlider(JSlider.HORIZONTAL, 0, HUE_MAX_VAL, H);
+        int MAX_VAL = 100;
+        saturationSlider = new JSlider(JSlider.HORIZONTAL, 0, MAX_VAL, S);
+        valueSlider = new JSlider(JSlider.HORIZONTAL, 0, MAX_VAL, V);
+
+        is_source = false;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
         JPanel row0 = new JPanel();
         row0.setLayout(new BoxLayout(row0, BoxLayout.X_AXIS));
-        JLabel name = new JLabel("HSV:");
-        row0.add(name);
+        row0.add(new JLabel("HSV:"));
+
         JPanel row1 = new JPanel();
         row1.setLayout(new BoxLayout(row1, BoxLayout.X_AXIS));
-        JLabel hue_label = new JLabel("Hue");
-        row1.add(hue_label);
-        row1.add(HueComponent);
-        row1.add(hue);
+        row1.add(new JLabel("Hue:"));
+        row1.add(hueTextField);
+        row1.add(hueSlider);
+
         JPanel row2 = new JPanel();
         row2.setLayout(new BoxLayout(row2, BoxLayout.X_AXIS));
-        JLabel saturation_label = new JLabel("Saturation");
-        row2.add(saturation_label);
-        row2.add(SaturationComponent);
-        row2.add(saturation);
+        row2.add(new JLabel("Saturation:"));
+        row2.add(saturationTextField);
+        row2.add(saturationSlider);
+
+
         JPanel row3 = new JPanel();
         row3.setLayout(new BoxLayout(row3, BoxLayout.X_AXIS));
-        JLabel value_label = new JLabel("Value");
-        row3.add(value_label);
-        row3.add(ValueComponent);
-        row3.add(value);
+        row3.add(new JLabel("Value:"));
+        row3.add(valueTextField);
+        row3.add(valueSlider);
+
         add(row0);
         add(row1);
         add(row2);
         add(row3);
 
-        HueComponent.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                hue.setText("" + HueComponent.getValue());
-
-                update_color();
-
+        hueTextField.addActionListener(e -> {
+            H = Integer.parseInt(hueTextField.getText());
+            if (H < 0 || H > 360) {
+                throw new IllegalArgumentException("Error! Hue value must be between 0 and 360!");
             }
+            hueSlider.setValue(H);
+            updateColorPanel();
         });
-         SaturationComponent.addChangeListener(new ChangeListener() {
-             @Override
-             public void stateChanged(ChangeEvent e) {
-                 saturation.setText("" + SaturationComponent.getValue());
-                 update_color();
 
-             }
-         });
+        saturationTextField.addActionListener(e -> {
+            S = Integer.parseInt(saturationTextField.getText());
+            if (S < 0 || S > 100) {
+                throw new IllegalArgumentException("Error! Saturation value must be between 0 and 100!");
+            }
+            saturationSlider.setValue(S);
+            updateColorPanel();
 
-         ValueComponent.addChangeListener(new ChangeListener() {
-             @Override
-             public void stateChanged(ChangeEvent e) {
-                 value.setText("" + ValueComponent.getValue());
-                 update_color();
+        });
 
-             }
-         });
+        valueTextField.addActionListener(e -> {
+            V = Integer.parseInt(valueTextField.getText());
+            if (V < 0 || V > 100) {
+                throw new IllegalArgumentException("Error! Value  must be between 0 and 100!");
+            }
+            valueSlider.setValue(V);
+            updateColorPanel();
+        });
 
-         hue.addActionListener(new ActionListener() {
-             @Override
-             public void actionPerformed(ActionEvent e) {
-                 HueComponent.setValue(Integer.parseInt(hue.getText()));
-                 update_color();
+        hueSlider.addChangeListener(e -> {
+            H = hueSlider.getValue();
+            hueTextField.setText("" + H);
+            updateColorPanel();
+        });
 
-             }
-         });
+        saturationSlider.addChangeListener(e -> {
+            S = saturationSlider.getValue();
+            saturationTextField.setText("" + S);
+            updateColorPanel();
+        });
 
-         saturation.addActionListener(new ActionListener() {
-             @Override
-             public void actionPerformed(ActionEvent e) {
-                 SaturationComponent.setValue(Integer.parseInt(saturation.getText()));
-                 update_color();
-
-             }
-         });
-
-         value.addActionListener(new ActionListener() {
-             @Override
-             public void actionPerformed(ActionEvent e) {
-                 ValueComponent.setValue(Integer.parseInt(value.getText()));
-                 update_color();
-
-             }
-         });
+        valueSlider.addChangeListener(e -> {
+            V = valueSlider.getValue();
+            valueTextField.setText("" + V);
+            updateColorPanel();
+        });
 
 
+    }
+
+
+    @Override
+    public void update() {
+        int H1 = H;
+        int S1 = S;
+        int V1 = V;
+        update_values();
+        if (H != H1) {
+            hueSlider.setValue(H);
+            hueTextField.setText("" + H);
+        }
+
+        if (S != S1) {
+            saturationSlider.setValue(S);
+            saturationTextField.setText("" + S);
+        }
+
+        if (V != V1) {
+            valueSlider.setValue(V);
+            valueTextField.setText("" + V);
+        }
     }
 
     @Override
-    public void update(Color color) {
-        float r = color.getRed() / 255f;
-        float g = color.getGreen() / 255f;
-        float b = color.getBlue() / 255f;
-
-        // Вычисление максимального и минимального значений RGB
-        float max = Math.max(r, Math.max(g, b));
-        float min = Math.min(r, Math.min(g, b));
-
-        // Вычисление значения оттенка
-        float h;
-        if (max == min) {
-            h = 0;  // Если все значения RGB одинаковые, оттенок равен 0
-        } else if (max == r) {
-            h = (60 * ((g - b) / (max - min)) + 360) % 360;
-        } else if (max == g) {
-            h = (60 * ((b - r) / (max - min)) + 120) % 360;
-        } else {
-            h = (60 * ((r - g) / (max - min)) + 240) % 360;
-        }
-
-        // Вычисление значения насыщенности
-        float s;
-        if (max == 0) {
-            s = 0;  // Если максимальное значение RGB равно 0, насыщенность равна 0
-        } else {
-            s = 100 * (max - min) / max;
-        }
-
-        // Вычисление значения значения
-        float v = 100 * max;
-        hue.setText("" + (int) h);
-        saturation.setText("" + (int) s);
-        value.setText(("" + (int) v));
-
-        HueComponent.setValue((int) h);
-        SaturationComponent.setValue((int) s);
-        ValueComponent.setValue((int) v);
-
-
+    public boolean is_change_source() {
+        return is_source;
     }
-     private void update_color() {
-        double h = HueComponent.getValue() / 360f;
-        double s = SaturationComponent.getValue() / 100f;
-        double v = ValueComponent.getValue() / 100f;
+
+    private void updateColorPanel() {
+        //this.colorPanel.removeObserver(this);
+        is_source = true;
+        double h = H / 360f;
+        double s = S / 100f;
+        double v = V / 100f;
 
         // Вычисление промежуточных значений
         int i = (int) Math.floor(h * 6);
@@ -211,19 +193,50 @@ public class HSVSwatch extends JPanel implements Observer{
                 break;
         }
 
-        // Приведение значений RGB в диапазон от 0 до 255
         int red = (int) (r * 255);
         int green = (int) (g * 255);
         int blue = (int) (b * 255);
-        ownColorPanel.removeObserver(this);
-        ownColor = new Color(red, green, blue);
-        ownColorPanel.removeObserver(this);
-        ownColorPanel.setColor(ownColor);
-        ownColorPanel.repaint();
-        ownColorPanel.registerObserver(this);
-        ownColorPanel.registerObserver(this);
+        Color color = new Color(red, green, blue);
+        colorPanel.setColor(color);
+        colorPanel.repaint();
+        colorPanel.color_changed();
+        //colorPanel.registerObserver(this);
+        is_source = false;
 
+        // if (this.colorPanel.is_currently_observer(this)) {};
+    }
 
+    void update_values() {
+        Color color = colorPanel.getColor();
+        float r = color.getRed() / 255f;
+        float g = color.getGreen() / 255f;
+        float b = color.getBlue() / 255f;
 
+        float max = Math.max(r, Math.max(g, b));
+        float min = Math.min(r, Math.min(g, b));
+
+        float h;
+        if (max == min) {
+            h = 0;
+        } else if (max == r) {
+            h = (60 * ((g - b) / (max - min)) + 360) % 360;
+        } else if (max == g) {
+            h = (60 * ((b - r) / (max - min)) + 120) % 360;
+        } else {
+            h = (60 * ((r - g) / (max - min)) + 240) % 360;
+        }
+
+        float s;
+        if (max == 0) {
+            s = 0;
+        } else {
+            s = 100 * (max - min) / max;
+        }
+
+        float v = 100 * max;
+
+        H = (int) h;
+        S = (int) s;
+        V = (int) v;
     }
 }
